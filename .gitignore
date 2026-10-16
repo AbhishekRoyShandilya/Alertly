@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.next/
+coverage/
+*.log
+
+# Secrets: only .env.example is committed
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
