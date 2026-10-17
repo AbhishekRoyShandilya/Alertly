@@ -1,4 +1,4 @@
-import {
+﻿import {
   ID_PREFIX,
   type Delivery,
   type DeliveryAttempt,
@@ -8,7 +8,7 @@ import { encodeId } from '../../lib/ids';
 import { toIsoOrNull } from '../../lib/time';
 import type { AttemptRow, DeliveryRow } from './repo';
 
-/** DB row (snake_case, numeric ids) → API shape (camelCase, public ids). */
+/** DB row (snake_case, numeric ids) â†’ API shape (camelCase, public ids). */
 export const toDelivery = (r: DeliveryRow): Delivery => ({
   id: encodeId(ID_PREFIX.delivery, r.id),
   notificationId: encodeId(ID_PREFIX.notification, r.notification_id),
@@ -19,8 +19,7 @@ export const toDelivery = (r: DeliveryRow): Delivery => ({
   attemptCount: r.attempt_count,
   maxAttempts: r.max_attempts,
   // Only meaningful while the delivery is still waiting to be tried.
-  nextAttemptAt:
-    r.status === 'pending' || r.status === 'retrying' ? r.next_attempt_at.toISOString() : null,
+  nextAttemptAt: toIsoOrNull(r.next_attempt_at),
   lastError: r.last_error,
   deliveredAt: toIsoOrNull(r.delivered_at),
   createdAt: r.created_at.toISOString(),

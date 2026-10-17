@@ -25,6 +25,8 @@ const EnvSchema = z.object({
   SMTP_URL: z.string().optional(),
 
   TELEGRAM_BOT_TOKEN: z.string().optional(),
+  /** Overridable so tests can point the Telegram sender at a local mock server. */
+  TELEGRAM_API_URL: z.url().default('https://api.telegram.org'),
 
   PRICE_PROVIDER_DEFAULT: z.enum(PRICE_PROVIDERS).default('simulated'),
 

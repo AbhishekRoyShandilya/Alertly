@@ -13,7 +13,7 @@ export interface DeliveryRow {
   attempt_count: number;
   total_attempts: number;
   max_attempts: number;
-  next_attempt_at: Date;
+  next_attempt_at: Date | null; // NULL when no attempt is scheduled (see migration 002)
   locked_by: string | null;
   locked_at: Date | null;
   last_error: string | null;

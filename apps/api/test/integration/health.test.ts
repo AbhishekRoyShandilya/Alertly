@@ -1,6 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+﻿import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import { createTestContext, type TestContext } from '../helpers/context';
+import { latestMigrationVersion } from '../../src/db/migrate';
 
 let ctx: TestContext;
 beforeAll(async () => {
@@ -18,7 +19,7 @@ describe('health and errors', () => {
   it('GET /ready reports the applied migration', async () => {
     const res = await request(ctx.app).get('/api/v1/ready');
     expect(res.status).toBe(200);
-    expect(res.body.migration).toBe('001_init');
+    expect(res.body.migration).toBe(await latestMigrationVersion());
   });
 
   it('unknown routes return problem JSON with the request id', async () => {
