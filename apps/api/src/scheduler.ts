@@ -8,7 +8,7 @@ import { AlertScheduler } from './scheduler/alert-scheduler';
 // Entry point of the scheduler process: `npm run dev:scheduler` / `node dist/scheduler.js`.
 const env = loadEnv();
 const log = createLogger(env, 'scheduler');
-const db = createPool(env.DATABASE_URL, 5);
+const db = createPool(env.DATABASE_URL, 5, env.DATABASE_CA_CERT);
 const deps = { env, db, clock: systemClock, log };
 const services = createServices(deps);
 

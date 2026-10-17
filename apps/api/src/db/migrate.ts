@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import mysql from 'mysql2/promise';
 import type { Logger } from '../lib/logger';
+import { connectionOptions } from './pool';
 
 // apps/api/migrations, found from src/db/ (dev, tests) or from dist/ (bundled build).
 const here = dirname(fileURLToPath(import.meta.url));
@@ -27,9 +28,10 @@ export async function runMigrations(
   databaseUrl: string,
   log?: Pick<Logger, 'info'>,
   dir = MIGRATIONS_DIR,
+  caCert?: string,
 ): Promise<string[]> {
   const conn = await mysql.createConnection({
-    uri: databaseUrl,
+    ...connectionOptions(databaseUrl, caCert),
     multipleStatements: true,
     timezone: 'Z',
   });

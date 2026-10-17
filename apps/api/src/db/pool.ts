@@ -6,9 +6,38 @@ export type Conn = PoolConnection;
 /** Anything that can run a query: the pool itself, or a connection inside a transaction. */
 export type Queryable = Pool | PoolConnection;
 
-export function createPool(url: string, connectionLimit: number): Db {
+/**
+ * Turns DATABASE_URL (+ optional CA certificate) into mysql2 options.
+ * Managed providers hand out URLs like `mysql://u:p@host:port/db?ssl-mode=REQUIRED`; mysql2
+ * doesn't understand `ssl-mode`, so it's removed from the URL and mapped to TLS options.
+ * With a CA certificate the server's identity is verified (no man-in-the-middle).
+ */
+export function connectionOptions(url: string, caCert?: string): mysql.ConnectionOptions {
+  const u = new URL(url);
+  const sslMode = (
+    u.searchParams.get('ssl-mode') ??
+    u.searchParams.get('sslmode') ??
+    ''
+  ).toUpperCase();
+  u.searchParams.delete('ssl-mode');
+  u.searchParams.delete('sslmode');
+  const useTls = Boolean(caCert) || (sslMode !== '' && sslMode !== 'DISABLED');
+  return {
+    uri: u.toString(),
+    ...(useTls
+      ? {
+          ssl: {
+            rejectUnauthorized: true,
+            ...(caCert ? { ca: caCert.replace(/\\n/g, '\n') } : {}),
+          },
+        }
+      : {}),
+  };
+}
+
+export function createPool(url: string, connectionLimit: number, caCert?: string): Db {
   const pool = mysql.createPool({
-    uri: url,
+    ...connectionOptions(url, caCert),
     connectionLimit,
     waitForConnections: true,
     // Store and read DATETIME values as UTC. mysql2 converts them to/from JS Date objects.

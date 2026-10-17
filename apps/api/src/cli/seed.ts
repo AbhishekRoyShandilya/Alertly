@@ -8,7 +8,7 @@ import { seedDemo } from '../db/seed';
 // `npm run seed -w apps/api` — creates the read-only demo account if it doesn't exist.
 const env = loadEnv();
 const log = createLogger({ ...env, LOG_LEVEL: env.LOG_LEVEL ?? 'info' }, 'seed');
-const db = createPool(env.DATABASE_URL, 2);
+const db = createPool(env.DATABASE_URL, 2, env.DATABASE_CA_CERT);
 const deps = { env, db, clock: systemClock, log };
 
 seedDemo(deps, createServices(deps))

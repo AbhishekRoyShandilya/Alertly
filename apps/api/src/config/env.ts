@@ -10,6 +10,19 @@ const EnvSchema = z.object({
 
   DATABASE_URL: z.string().startsWith('mysql://'),
   DB_POOL_SIZE: z.coerce.number().int().min(2).max(100).default(10),
+  /**
+   * PEM CA certificate for TLS to a managed MySQL that uses its own CA (e.g. Aiven).
+   * Literal "\n" sequences are accepted, since many dashboards store values on one line.
+   */
+  DATABASE_CA_CERT: z.string().optional(),
+
+  /**
+   * Run the delivery worker and alert scheduler inside the API process. For free hosting
+   * with a single service; normally they run as separate processes.
+   */
+  EMBED_WORKERS: bool.default(false),
+  /** Apply migrations and seed the demo account at startup (when no release step exists). */
+  MIGRATE_ON_START: bool.default(false),
 
   JWT_SECRET: z.string().min(32, 'use at least 32 random characters'),
   /** 32 random bytes, base64. Generate with: node -e "console.log(crypto.randomBytes(32).toString('base64'))" */
@@ -60,7 +73,9 @@ export type Env = z.infer<typeof EnvSchema> & {
  * Nothing else in the codebase reads process.env.
  */
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  const parsed = EnvSchema.safeParse(source);
+  // Hosting dashboards often save optional fields left blank as "". Treat those as unset.
+  const cleaned = Object.fromEntries(Object.entries(source).filter(([, v]) => v !== ''));
+  const parsed = EnvSchema.safeParse(cleaned);
   if (!parsed.success) {
     const lines = parsed.error.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`);
     throw new Error(`Invalid environment configuration:\n${lines.join('\n')}`);

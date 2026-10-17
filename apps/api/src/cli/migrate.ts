@@ -1,12 +1,12 @@
 import { loadEnv } from '../config/env';
 import { createLogger } from '../lib/logger';
-import { runMigrations } from '../db/migrate';
+import { MIGRATIONS_DIR, runMigrations } from '../db/migrate';
 
 // `npm run migrate -w apps/api` — also used as the release step on deploy.
 const env = loadEnv();
 const log = createLogger({ ...env, LOG_LEVEL: env.LOG_LEVEL ?? 'info' }, 'migrate');
 
-runMigrations(env.DATABASE_URL, log)
+runMigrations(env.DATABASE_URL, log, MIGRATIONS_DIR, env.DATABASE_CA_CERT)
   .then((applied) => {
     log.info(
       { count: applied.length },

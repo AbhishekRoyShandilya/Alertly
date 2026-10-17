@@ -22,12 +22,18 @@ export async function seedDemo(
     name: 'Demo',
   });
 
-  const email = await services.channels.create(userId, {
-    type: 'email',
-    name: 'Demo inbox',
-    config: { to: 'demo-inbox@example.com' },
-  });
-  const channelIds = [decodeId('ch', email.id)];
+  const channelIds: number[] = [];
+  // Email only if this server can actually send it (otherwise every demo delivery would show
+  // "Email is not configured"), or as a fallback when no demo webhook is set either.
+  const emailConfigured = Boolean(env.RESEND_API_KEY || env.SMTP_URL);
+  if (emailConfigured || !env.DEMO_WEBHOOK_URL) {
+    const email = await services.channels.create(userId, {
+      type: 'email',
+      name: 'Demo inbox',
+      config: { to: 'demo-inbox@example.com' },
+    });
+    channelIds.push(decodeId('ch', email.id));
+  }
 
   if (env.DEMO_WEBHOOK_URL) {
     const hook = await services.channels.create(userId, {

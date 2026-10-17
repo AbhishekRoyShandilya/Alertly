@@ -1,5 +1,65 @@
 # Deployment
 
+## Free setup: Aiven MySQL + Render + Vercel (what the live demo uses)
+
+```
+Vercel (dashboard) ──/api/* rewrite──▶ Render free web service ──TLS──▶ Aiven free MySQL
+                                       (API + worker + scheduler in one process)
+```
+
+Free plans change; check current limits. Known trade-off: a free Render service **sleeps after
+~15 minutes without traffic**. The first request then takes up to a minute to wake it, and
+alerts don't fire while it sleeps.
+
+### Step 0: code on GitHub
+
+Render and Vercel deploy from a GitHub repo, so push this repository first.
+
+### Step 1: MySQL on Aiven
+
+1. Sign up at aiven.io → **Create service** → **MySQL** → **Free plan** → pick a region close
+   to your Render region.
+2. When it's running, open the service **Overview** and copy:
+   - **Service URI** → this is `DATABASE_URL`
+     (`mysql://avnadmin:…@….aivencloud.com:PORT/defaultdb?ssl-mode=REQUIRED`)
+   - **CA certificate** (download or show) → this is `DATABASE_CA_CERT`
+   - The API strips `ssl-mode` from the URL and verifies the server with the CA certificate.
+
+### Step 2: backend on Render
+
+1. render.com → sign in with GitHub → **New** → **Blueprint** → select the `alertly` repo.
+   Render reads [`render.yaml`](../render.yaml).
+2. Fill in the prompted values:
+   - `DATABASE_URL` and `DATABASE_CA_CERT` from step 1 (paste the whole PEM, including the
+     BEGIN/END lines)
+   - `WEB_ORIGIN`: your Vercel URL (you can fill it in after step 3 and redeploy)
+   - optional `DEMO_WEBHOOK_URL`: open webhook.site and copy your unique URL, so the demo's
+     alerts post somewhere visible
+   - optional `RESEND_API_KEY` and `EMAIL_FROM` for real emails
+3. Deploy. In the logs you should see `migration applied 001_init`, `002_queue_index`,
+   `demo account checked`, then `API listening`.
+4. Check `https://<your-service>.onrender.com/api/v1/ready` →
+   `{"status":"ready","migration":"002_queue_index"}`, and that `/docs` shows Swagger UI.
+
+### Step 3: dashboard on Vercel
+
+1. vercel.com/new → import the `alertly` repo.
+2. **Root Directory:** `apps/web` (Vercel detects Next.js and the npm workspace).
+3. **Environment variables** (set them **before** the first build, because the rewrite target
+   is fixed at build time):
+   - `API_URL` = `https://<your-service>.onrender.com`
+   - `NEXT_PUBLIC_API_DOCS_URL` = the same URL
+4. Deploy, open the site, and log in with `demo@alertly.dev` / `demo-password-123`.
+5. Put the Vercel URL into Render's `WEB_ORIGIN` if you haven't yet.
+
+### Step 4: README
+
+Replace `OWNER` and the live-demo placeholders at the top of `README.md` with your URLs.
+
+---
+
+## Scaling up: separate processes
+
 Four pieces: **MySQL**, the **API image** (run three times: api, worker, scheduler), and the
 **dashboard** (Vercel). Free and low-cost tiers change often, so check current limits when
 you deploy.

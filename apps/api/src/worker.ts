@@ -10,7 +10,7 @@ import { DeliveryWorker } from './worker/delivery-worker';
 const env = loadEnv();
 const log = createLogger(env, 'worker');
 // Pool sized to the send concurrency plus headroom for claims and recovery.
-const db = createPool(env.DATABASE_URL, env.WORKER_CONCURRENCY + 3);
+const db = createPool(env.DATABASE_URL, env.WORKER_CONCURRENCY + 3, env.DATABASE_CA_CERT);
 const deps = { env, db, clock: systemClock, log };
 
 const workerId = `${hostname()}:${process.pid}`.slice(0, 64);
