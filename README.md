@@ -5,7 +5,7 @@ Apps send notifications through a REST API, and users create alert rules like _"
 crosses 70,000"_. Alertly delivers every notification with retries and exponential backoff,
 never creates duplicates, signs its webhooks, and records every delivery attempt in a dashboard.
 
-[![CI](https://github.com/AbhishekRoyShandilya/alertly/actions/workflows/ci.yml/badge.svg)](https://github.com/AbhishekRoyShandilya/alertly/actions/workflows/ci.yml)
+[![CI](https://github.com/AbhishekRoyShandilya/Alertly/actions/workflows/ci.yml/badge.svg)](https://github.com/AbhishekRoyShandilya/Alertly/actions/workflows/ci.yml)
 
 > **Live demo:** _dashboard URL_ · **API docs:** _API URL/docs_
 > Log in with the read-only demo account: `demo@alertly.dev` / `demo-password-123`
@@ -88,7 +88,7 @@ TanStack Query · Vitest · Supertest · Docker · GitHub Actions
 Requirements: Node.js 22+, Docker.
 
 ```bash
-git clone https://github.com/AbhishekRoyShandilya/alertly.git && cd alertly
+git clone https://github.com/AbhishekRoyShandilya/Alertly.git && cd alertly
 cp .env.example .env
 docker compose up -d          # MySQL + Mailpit (fake SMTP with an inbox at http://localhost:8025)
 npm install
