@@ -10,6 +10,7 @@
     "migrate": "node --env-file-if-exists=../../.env --import tsx src/cli/migrate.ts",
     "seed": "node --env-file-if-exists=../../.env --import tsx src/cli/seed.ts",
     "build": "node build.mjs",
+    "bench": "node --import tsx scripts/bench.ts",
     "start:api": "node dist/server.js",
     "start:worker": "node dist/worker.js",
     "start:scheduler": "node dist/scheduler.js",
@@ -36,12 +37,14 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/autocannon": "^7.12.7",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/nodemailer": "^8.0.2",
     "@types/supertest": "^7.2.1",
     "@types/swagger-ui-express": "^4.1.8",
+    "autocannon": "^8.0.0",
     "esbuild": "^0.28.2",
     "pino-pretty": "^13.2.0",
     "supertest": "^7.3.1",

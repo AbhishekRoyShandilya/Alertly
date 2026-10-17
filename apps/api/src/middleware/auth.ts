@@ -3,7 +3,7 @@ import type { Deps } from '../context';
 import type { AuthContext } from '../types/express';
 import { forbidden, unauthorized } from '../lib/errors';
 import { API_KEY_PREFIX } from '../lib/crypto';
-import { incrementUsage } from '../modules/usage/service';
+import type { UsageService } from '../modules/usage/service';
 import { SESSION_COOKIE, type AuthService } from '../modules/auth/service';
 import type { ApiKeysService } from '../modules/api-keys/service';
 import { RateLimiter } from './rate-limit';
@@ -18,9 +18,9 @@ import { RateLimiter } from './rate-limit';
  */
 export function createAuthMiddleware(
   deps: Deps,
-  services: { auth: AuthService; apiKeys: ApiKeysService },
+  services: { auth: AuthService; apiKeys: ApiKeysService; usage: UsageService },
 ) {
-  const { db, clock, env, log } = deps;
+  const { clock, env } = deps;
   const apiLimiter = new RateLimiter(env.API_RATE_LIMIT_PER_MIN, 60_000, clock);
 
   async function fromSession(req: Request): Promise<AuthContext | null> {
@@ -76,9 +76,7 @@ export function createAuthMiddleware(
     assertDemoAllowed(req, auth);
     if (auth.via === 'api_key') {
       apiLimiter.check(`key:${auth.apiKeyId}`, res);
-      incrementUsage(db, auth.userId, 'api_requests', clock.now()).catch((err: unknown) =>
-        log.warn({ err }, 'usage increment failed'),
-      );
+      services.usage.recordApiRequest(auth.userId); // buffered, flushed every 5 s
     }
     req.auth = auth;
     req.log = req.log.child({ userId: auth.userId });

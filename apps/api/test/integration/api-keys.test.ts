@@ -56,6 +56,21 @@ describe('API keys', () => {
     expect((await bob.agent.delete(`/api/v1/api-keys/${aliceKeyId}`)).status).toBe(404);
   });
 
+  it('counts API-key requests in usage (buffered, then flushed)', async () => {
+    const { agent } = await signUp(ctx.app);
+    const key = await createKey(agent);
+    for (let i = 0; i < 3; i++) {
+      await request(ctx.app).get('/api/v1/channels').set('Authorization', `Bearer ${key}`);
+    }
+    // Buffered in memory: not written yet
+    const before = (await agent.get('/api/v1/usage?days=1')).body.days;
+    expect(before[0]?.apiRequests ?? 0).toBe(0);
+
+    await ctx.services.usage.flush();
+    const after = (await agent.get('/api/v1/usage?days=1')).body.days;
+    expect(after[0].apiRequests).toBe(3);
+  });
+
   it('rejects garbage bearer tokens', async () => {
     const res = await request(ctx.app)
       .get('/api/v1/auth/me')

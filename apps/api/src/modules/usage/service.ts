@@ -48,10 +48,41 @@ export async function notificationsToday(
   return row?.notifications ?? 0;
 }
 
-export function createUsageService({ db, clock, env }: Deps) {
+export const API_REQUEST_FLUSH_MS = 5_000;
+
+export function createUsageService({ db, clock, env, log }: Deps) {
+  /**
+   * API-request counts are buffered in memory and written once every 5 s per user, instead of
+   * one upsert (= one commit) per request. The benchmark showed commits were the bottleneck,
+   * so this was measured, not guessed (docs/PERFORMANCE.md). Trade-off: a crash loses at most
+   * 5 s of request counts, which is fine for a usage chart (not for billing).
+   */
+  const pending = new Map<number, number>();
+
+  async function flushApiRequests(): Promise<void> {
+    if (pending.size === 0) return;
+    const batch = [...pending];
+    pending.clear();
+    const now = clock.now();
+    for (const [userId, count] of batch) {
+      await incrementUsage(db, userId, 'api_requests', now, count).catch((err: unknown) => {
+        pending.set(userId, (pending.get(userId) ?? 0) + count); // keep it for the next flush
+        log.warn({ err }, 'usage flush failed');
+      });
+    }
+  }
+  setInterval(() => void flushApiRequests(), API_REQUEST_FLUSH_MS).unref();
+
   return {
     increment: (userId: number, field: UsageField, by = 1) =>
       incrementUsage(db, userId, field, clock.now(), by),
+
+    recordApiRequest(userId: number): void {
+      pending.set(userId, (pending.get(userId) ?? 0) + 1);
+    },
+
+    /** Called on shutdown (and by tests) so buffered counts aren't lost. */
+    flush: flushApiRequests,
 
     async get(
       userId: number,
