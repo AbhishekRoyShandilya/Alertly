@@ -4,14 +4,48 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev:api": "node --watch --env-file-if-exists=../../.env --import tsx src/server.ts",
+    "dev:worker": "node --watch --env-file-if-exists=../../.env --import tsx src/worker.ts",
+    "dev:scheduler": "node --watch --env-file-if-exists=../../.env --import tsx src/scheduler.ts",
+    "migrate": "node --env-file-if-exists=../../.env --import tsx src/cli/migrate.ts",
+    "seed": "node --env-file-if-exists=../../.env --import tsx src/cli/seed.ts",
+    "build": "node build.mjs",
+    "start:api": "node dist/server.js",
+    "start:worker": "node dist/worker.js",
+    "start:scheduler": "node dist/scheduler.js",
+    "start:migrate": "node dist/migrate.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:unit": "vitest run test/unit",
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@alertly/shared": "*"
+    "@alertly/shared": "*",
+    "@asteasolutions/zod-to-openapi": "^9.1.0",
+    "@node-rs/argon2": "^2.2.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "jose": "^6.2.12",
+    "mysql2": "^3.24.6",
+    "nodemailer": "^10.1.2",
+    "p-limit": "^7.3.3",
+    "pino": "^10.4.0",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/nodemailer": "^8.0.2",
+    "@types/supertest": "^7.2.1",
+    "@types/swagger-ui-express": "^4.1.8",
+    "esbuild": "^0.28.2",
+    "pino-pretty": "^13.2.0",
+    "supertest": "^7.3.1",
+    "tsx": "^4.23.15",
     "vitest": "^5.0.5"
   }
 }

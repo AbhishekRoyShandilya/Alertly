@@ -1,0 +1,30 @@
+# Local development services. `docker compose up -d` starts MySQL and Mailpit.
+# The full stack (api, worker, scheduler, web) runs with: docker compose --profile app up --build
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: alertly
+      MYSQL_USER: alertly
+      MYSQL_PASSWORD: alertly
+    command: ['--default-time-zone=+00:00']
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-uroot', '-proot']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Fake SMTP server with a web inbox at http://localhost:8025. Emails never leave your machine.
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
+volumes:
+  mysql-data:

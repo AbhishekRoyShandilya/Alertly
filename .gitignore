@@ -9,6 +9,9 @@ coverage/
 .env.*
 !.env.example
 
+# Personal study notes (kept local, not published)
+study/
+
 # OS / editor
 .DS_Store
 Thumbs.db

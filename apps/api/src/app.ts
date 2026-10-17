@@ -1,0 +1,35 @@
+import express, { Router, type Express } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
+import type { Deps } from './context';
+import { requestId } from './middleware/request-id';
+import { errorHandler, notFoundHandler } from './middleware/errors';
+import { healthRoutes } from './modules/health/routes';
+
+/**
+ * Builds the Express app without starting it. server.ts calls listen(); tests pass the app
+ * straight to Supertest, which needs no open port.
+ *
+ * Middleware order matters: request id first (so every later log line has it), body parsing
+ * and security headers next, routes, then 404, then the error handler last.
+ */
+export function buildApp(deps: Deps): Express {
+  const app = express();
+  app.disable('x-powered-by');
+  app.set('trust proxy', 1); // behind one proxy (Render/Railway/Vercel): real client IP for rate limits
+
+  app.use(requestId(deps.log));
+  app.use(express.json({ limit: '100kb' }));
+  app.use(cookieParser());
+  app.use(cors({ origin: deps.env.WEB_ORIGIN, credentials: true }));
+  app.use(helmet());
+
+  const v1 = Router();
+  v1.use(healthRoutes(deps));
+  app.use('/api/v1', v1);
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+  return app;
+}
