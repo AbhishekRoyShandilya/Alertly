@@ -6,6 +6,8 @@ const API_URL = process.env.API_URL ?? 'http://localhost:4000';
 
 const config: NextConfig = {
   poweredByHeader: false,
+  // Docker builds set NEXT_OUTPUT=standalone for a small self-contained server; Vercel doesn't need it.
+  output: process.env.NEXT_OUTPUT === 'standalone' ? 'standalone' : undefined,
   // The shared package is TypeScript source; Next compiles it like app code.
   transpilePackages: ['@alertly/shared'],
   // npm workspaces hoist dependencies to the repo root.

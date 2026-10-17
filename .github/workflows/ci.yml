@@ -37,4 +37,16 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      # API unit + integration tests (real MySQL) and web component tests
       - run: npm test
+      # Production builds: esbuild bundles for the API, `next build` for the dashboard
+      - run: npm run build
+
+  docker:
+    # Proves the Dockerfiles still build. Runs after the checks pass.
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f apps/api/Dockerfile -t alertly-api .
+      - run: docker build -f apps/web/Dockerfile -t alertly-web .
