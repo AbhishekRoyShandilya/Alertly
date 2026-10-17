@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 import { PRICE_PROVIDERS } from '@alertly/shared';
 
 const bool = z.enum(['true', 'false', '1', '0']).transform((v) => v === 'true' || v === '1');
@@ -34,6 +34,8 @@ const EnvSchema = z.object({
 
   DAILY_NOTIFICATION_QUOTA: z.coerce.number().int().positive().default(1000),
   API_RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().default(60),
+  LOGIN_RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().default(5),
+  REGISTER_RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().default(10),
 
   /** Lets webhooks target localhost/private IPs. Only for local development and tests. */
   WEBHOOK_ALLOW_PRIVATE: bool.default(false),

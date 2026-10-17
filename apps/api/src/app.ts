@@ -10,6 +10,9 @@ import { createServices } from './services';
 import { createAuthMiddleware } from './middleware/auth';
 import { authRoutes } from './modules/auth/routes';
 import { apiKeyRoutes } from './modules/api-keys/routes';
+import { channelRoutes } from './modules/channels/routes';
+import { notificationRoutes } from './modules/notifications/routes';
+import { deliveryRoutes } from './modules/deliveries/routes';
 
 /**
  * Builds the Express app without starting it. server.ts calls listen(); tests pass the app
@@ -36,6 +39,9 @@ export function buildApp(deps: Deps): Express {
   v1.use(healthRoutes(deps));
   v1.use(authRoutes(deps, services.auth, mw));
   v1.use(apiKeyRoutes(services.apiKeys, mw));
+  v1.use(channelRoutes(services.channels, mw));
+  v1.use(notificationRoutes(services.notifications, mw));
+  v1.use(deliveryRoutes(services.deliveries, mw));
   app.use('/api/v1', v1);
 
   app.use(notFoundHandler);

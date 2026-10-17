@@ -9,9 +9,9 @@ import { SESSION_COOKIE, SESSION_TTL_SEC, type AuthService } from './service';
 
 export function authRoutes(deps: Deps, auth: AuthService, mw: AuthMiddleware): Router {
   const r = Router();
-  // Brute-force protection: 5 login attempts per minute per IP (design section 10).
-  const loginLimiter = new RateLimiter(5, 60_000, deps.clock);
-  const registerLimiter = new RateLimiter(10, 60_000, deps.clock);
+  // Brute-force protection: by default 5 login attempts per minute per IP (design section 10).
+  const loginLimiter = new RateLimiter(deps.env.LOGIN_RATE_LIMIT_PER_MIN, 60_000, deps.clock);
+  const registerLimiter = new RateLimiter(deps.env.REGISTER_RATE_LIMIT_PER_MIN, 60_000, deps.clock);
 
   /**
    * httpOnly: JavaScript can't read the cookie, so an XSS bug can't steal the session.

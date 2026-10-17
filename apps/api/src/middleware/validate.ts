@@ -20,3 +20,9 @@ export function parse<S extends z.ZodType>(schema: S, value: unknown): z.output<
   }
   return result.data;
 }
+
+/** A route parameter as a string (Express 5 types widen params when middleware precedes the handler). */
+export function param(req: { params: Record<string, unknown> }, name: string): string {
+  const v = req.params[name];
+  return typeof v === 'string' ? v : '';
+}
