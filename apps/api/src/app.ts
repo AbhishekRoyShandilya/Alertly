@@ -6,6 +6,10 @@ import type { Deps } from './context';
 import { requestId } from './middleware/request-id';
 import { errorHandler, notFoundHandler } from './middleware/errors';
 import { healthRoutes } from './modules/health/routes';
+import { createServices } from './services';
+import { createAuthMiddleware } from './middleware/auth';
+import { authRoutes } from './modules/auth/routes';
+import { apiKeyRoutes } from './modules/api-keys/routes';
 
 /**
  * Builds the Express app without starting it. server.ts calls listen(); tests pass the app
@@ -25,8 +29,13 @@ export function buildApp(deps: Deps): Express {
   app.use(cors({ origin: deps.env.WEB_ORIGIN, credentials: true }));
   app.use(helmet());
 
+  const services = createServices(deps);
+  const mw = createAuthMiddleware(deps, services);
+
   const v1 = Router();
   v1.use(healthRoutes(deps));
+  v1.use(authRoutes(deps, services.auth, mw));
+  v1.use(apiKeyRoutes(services.apiKeys, mw));
   app.use('/api/v1', v1);
 
   app.use(notFoundHandler);
