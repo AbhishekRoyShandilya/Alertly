@@ -164,13 +164,9 @@ export function buildOpenApiDocument(serverUrl = '/') {
   route('post', '/notifications', 'Notifications', 'Send a notification', {
     security: EITHER,
     headers: z.object({
-      'Idempotency-Key': z
-        .string()
-        .max(S.IDEMPOTENCY_KEY_MAX)
-        .optional()
-        .meta({
-          description: 'Recommended. Retrying with the same key never creates a duplicate.',
-        }),
+      'Idempotency-Key': z.string().max(S.IDEMPOTENCY_KEY_MAX).optional().meta({
+        description: 'Recommended. Retrying with the same key never creates a duplicate.',
+      }),
     }),
     body: S.CreateNotificationInput,
     responses: {
@@ -199,6 +195,11 @@ export function buildOpenApiDocument(serverUrl = '/') {
     security: EITHER,
     query: S.PageQuery.extend(S.ListDeliveriesQuery.shape),
     responses: { 200: json(S.pageOf(S.Delivery)) },
+  });
+  route('get', '/deliveries/stats', 'Deliveries', 'Counts per status and success rate', {
+    security: EITHER,
+    query: z.object({ hours: z.number().int().min(1).max(720).optional() }),
+    responses: { 200: json(S.DeliveryStats) },
   });
   route('get', '/deliveries/{id}', 'Deliveries', 'A delivery with all its attempts', {
     security: EITHER,

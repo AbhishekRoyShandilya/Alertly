@@ -236,6 +236,18 @@ describe('delivery worker', () => {
     while ((await makeWorker('drain', 20).runOnce()).claimed > 0);
   });
 
+  it('stats count deliveries by status with a success rate', async () => {
+    const u = await webhookUser();
+    await u.notify('ok-1');
+    await u.notify('ok-2');
+    await u.notify('bad');
+    mock.respond(200, 200, 404);
+    while ((await makeWorker('stats').runOnce()).claimed > 0);
+    const s = (await u.agent.get('/api/v1/deliveries/stats?hours=24')).body;
+    expect(s.counts).toMatchObject({ delivered: 2, failed: 1, pending: 0 });
+    expect(s.successRate).toBeCloseTo(2 / 3);
+  });
+
   it('delivers email and telegram through their senders', async () => {
     const { agent } = await signUp(ctx.app);
     const email = (

@@ -1,4 +1,5 @@
 ﻿import { Router } from 'express';
+import { z } from 'zod';
 import { ID_PREFIX, ListDeliveriesQuery, PageQuery } from '@alertly/shared';
 import { param, parse } from '../../middleware/validate';
 import { userIdOf, type AuthMiddleware } from '../../middleware/auth';
@@ -25,6 +26,15 @@ export function deliveryRoutes(deliveries: DeliveriesService, mw: AuthMiddleware
         page.cursor,
       ),
     );
+  });
+
+  // Registered before /deliveries/:id so "stats" isn't mistaken for an id.
+  r.get('/deliveries/stats', mw.requireSessionOrApiKey, async (req, res) => {
+    const { hours } = parse(
+      z.object({ hours: z.coerce.number().int().min(1).max(720).default(24) }),
+      req.query,
+    );
+    res.json(await deliveries.stats(userIdOf(req), hours));
   });
 
   r.get('/deliveries/:id', mw.requireSessionOrApiKey, async (req, res) => {

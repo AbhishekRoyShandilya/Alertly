@@ -11,6 +11,10 @@
     "node": ">=22"
   },
   "scripts": {
+    "dev": "concurrently -k -n api,worker,sched,web -c blue,green,magenta,cyan \"npm:dev:api -w @alertly/api\" \"npm:dev:worker -w @alertly/api\" \"npm:dev:scheduler -w @alertly/api\" \"npm:dev -w @alertly/web\"",
+    "build": "npm run build -w @alertly/api && npm run build -w @alertly/web",
+    "migrate": "npm run migrate -w @alertly/api",
+    "seed": "npm run seed -w @alertly/api",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "npm run typecheck --workspaces --if-present",

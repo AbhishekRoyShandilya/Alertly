@@ -89,6 +89,16 @@ export const ListNotificationsQuery = z.object({
   to: z.iso.datetime().optional(),
 });
 
+export const DeliveryStats = z
+  .object({
+    since: IsoDate,
+    counts: z.record(z.enum(DELIVERY_STATUSES), z.number().int()),
+    /** delivered / (delivered + failed + dead), or null when nothing finished yet. */
+    successRate: z.number().nullable(),
+  })
+  .meta({ id: 'DeliveryStats' });
+export type DeliveryStats = z.infer<typeof DeliveryStats>;
+
 export const ListDeliveriesQuery = z.object({
   status: z.enum(DELIVERY_STATUSES).optional(),
   channelId: publicId(ID_PREFIX.channel).optional(),

@@ -88,6 +88,14 @@ export async function listDeliveries(
   );
 }
 
+/** Counts per status since a time. Served by INDEX (user_id, created_at, id). */
+export const countByStatus = (db: Queryable, userId: number, since: Date) =>
+  query<{ status: DeliveryStatus; n: number }>(
+    db,
+    'SELECT status, COUNT(*) AS n FROM deliveries WHERE user_id = ? AND created_at >= ? GROUP BY status',
+    [userId, since],
+  );
+
 export const findDelivery = (db: Queryable, userId: number, id: number) =>
   queryOne<DeliveryRow>(db, `${SELECT_DELIVERY} WHERE d.id = ? AND d.user_id = ?`, [id, userId]);
 
