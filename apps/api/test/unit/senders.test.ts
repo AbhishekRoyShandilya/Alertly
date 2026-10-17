@@ -103,7 +103,7 @@ describe('telegram sender', () => {
     expect(r).toMatchObject({ ok: false, retryable: true });
     expect(JSON.stringify(r)).not.toContain('TOKEN');
   });
-  it('not configured â†’ permanent', async () => {
+  it('not configured → permanent', async () => {
     expect(await send(reply(200, { ok: true }), undefined)).toMatchObject({
       ok: false,
       retryable: false,

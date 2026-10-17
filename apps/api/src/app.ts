@@ -2,6 +2,8 @@ import express, { Router, type Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import swaggerUi from 'swagger-ui-express';
+import { buildOpenApiDocument } from './docs/openapi';
 import type { Deps } from './context';
 import { requestId } from './middleware/request-id';
 import { errorHandler, notFoundHandler } from './middleware/errors';
@@ -46,6 +48,13 @@ export function buildApp(deps: Deps, services: Services = createServices(deps)):
   v1.use(alertRoutes(services.alerts, mw));
   v1.use(priceAndUsageRoutes(services.prices, services.usage, deps.env.PRICE_PROVIDER_DEFAULT, mw));
   app.use('/api/v1', v1);
+
+  // API docs, generated once at startup from the shared Zod schemas.
+  const openapi = buildOpenApiDocument();
+  app.get('/docs/openapi.json', (_req, res) => {
+    res.json(openapi);
+  });
+  app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi, { customSiteTitle: 'Alertly API' }));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

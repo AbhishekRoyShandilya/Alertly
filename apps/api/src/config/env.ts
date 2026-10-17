@@ -39,6 +39,12 @@ const EnvSchema = z.object({
   LOGIN_RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().default(5),
   REGISTER_RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().default(10),
 
+  /** The seeded demo account is read-only, so reviewers can look around without breaking it. */
+  DEMO_EMAIL: z.string().default('demo@alertly.dev'),
+  DEMO_PASSWORD: z.string().min(10).default('demo-password-123'),
+  /** Optional: where the demo account's webhook channel posts (e.g. a request inspector URL). */
+  DEMO_WEBHOOK_URL: z.url().optional(),
+
   /** Lets webhooks target localhost/private IPs. Only for local development and tests. */
   WEBHOOK_ALLOW_PRIVATE: bool.default(false),
 });

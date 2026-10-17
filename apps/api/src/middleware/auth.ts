@@ -1,7 +1,7 @@
-import type { Request, RequestHandler } from 'express';
+﻿import type { Request, RequestHandler } from 'express';
 import type { Deps } from '../context';
 import type { AuthContext } from '../types/express';
-import { unauthorized } from '../lib/errors';
+import { forbidden, unauthorized } from '../lib/errors';
 import { API_KEY_PREFIX } from '../lib/crypto';
 import { incrementUsage } from '../modules/usage/service';
 import { SESSION_COOKIE, type AuthService } from '../modules/auth/service';
@@ -29,8 +29,26 @@ export function createAuthMiddleware(
     const userId = await services.auth.verifySessionToken(token);
     if (!userId) return null;
     // The user may have been deleted since the token was issued.
-    if (!(await services.auth.getUser(userId))) return null;
-    return { userId, via: 'session' };
+    const user = await services.auth.getUser(userId);
+    if (!user) return null;
+    return { userId, via: 'session', isDemo: user.email === env.DEMO_EMAIL };
+  }
+
+  /**
+   * The public demo account can look at everything but change nothing, so one reviewer can't
+   * break the demo for the next. A few harmless actions stay allowed.
+   */
+  const DEMO_ALLOWED = [
+    /^\/auth\/logout$/,
+    /^\/channels\/[^/]+\/test$/,
+    /^\/alerts\/[^/]+\/evaluate$/,
+  ];
+  function assertDemoAllowed(req: Request, auth: AuthContext) {
+    if (!auth.isDemo || req.method === 'GET') return;
+    const path = req.originalUrl.split('?')[0]!.replace(/^\/api\/v1/, '');
+    if (!DEMO_ALLOWED.some((re) => re.test(path))) {
+      throw forbidden('The demo account is read-only. Register your own account to try this.');
+    }
   }
 
   async function fromApiKey(req: Request): Promise<AuthContext | null> {
@@ -46,6 +64,7 @@ export function createAuthMiddleware(
   const requireSession: RequestHandler = async (req, _res, next) => {
     const auth = await fromSession(req);
     if (!auth) throw unauthorized();
+    assertDemoAllowed(req, auth);
     req.auth = auth;
     req.log = req.log.child({ userId: auth.userId });
     next();
@@ -54,6 +73,7 @@ export function createAuthMiddleware(
   const requireSessionOrApiKey: RequestHandler = async (req, res, next) => {
     const auth = (await fromSession(req)) ?? (await fromApiKey(req));
     if (!auth) throw unauthorized('Log in, or send an API key as "Authorization: Bearer alr_…"');
+    assertDemoAllowed(req, auth);
     if (auth.via === 'api_key') {
       apiLimiter.check(`key:${auth.apiKeyId}`, res);
       incrementUsage(db, auth.userId, 'api_requests', clock.now()).catch((err: unknown) =>

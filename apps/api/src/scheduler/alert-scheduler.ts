@@ -18,7 +18,7 @@ export interface TickSummary {
 }
 
 /**
- * Every tick: load active rules â†’ one price call per provider â†’ evaluate each rule â†’ save.
+ * Every tick: load active rules → one price call per provider → evaluate each rule → save.
  *
  * Only ONE scheduler may run, or two instances would both evaluate (and fire) every rule.
  * Leader election with a MySQL advisory lock: GET_LOCK('alertly_scheduler', 0) returns 1 for
@@ -43,7 +43,7 @@ export class AlertScheduler {
   private async ensureLeader(): Promise<boolean> {
     if (this.isLeader && this.lockConn) {
       try {
-        await this.lockConn.query('SELECT 1'); // still connected â†’ still holding the lock
+        await this.lockConn.query('SELECT 1'); // still connected → still holding the lock
         return true;
       } catch {
         this.isLeader = false;

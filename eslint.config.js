@@ -1,12 +1,14 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
+import globals from 'globals';
 
 export default tseslint.config(
   { ignores: ['**/node_modules/**', '**/dist/**', '**/.next/**', '**/coverage/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    languageOptions: { globals: { ...globals.node } },
     rules: {
       // Allow intentionally unused args/vars when prefixed with "_" (e.g. Express's `next`).
       '@typescript-eslint/no-unused-vars': [

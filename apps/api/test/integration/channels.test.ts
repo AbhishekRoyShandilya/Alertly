@@ -114,7 +114,7 @@ describe('channels', () => {
     expect(row!.n).toBe(1);
   });
 
-  it('isolates users: 404 for someone elseâ€™s channel', async () => {
+  it('isolates users: 404 for someone else’s channel', async () => {
     const alice = await signUp(ctx.app);
     const bob = await signUp(ctx.app);
     const ch = (

@@ -51,7 +51,7 @@ export async function insertNotification(
 
 /**
  * The fan-out: one delivery row per target channel, in a single multi-row INSERT.
- * `VALUES ?` with an array of arrays is expanded by mysql2 into (â€¦), (â€¦), (â€¦).
+ * `VALUES ?` with an array of arrays is expanded by mysql2 into (…), (…), (…).
  */
 export async function insertDeliveries(
   db: Queryable,

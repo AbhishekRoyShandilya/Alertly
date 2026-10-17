@@ -8,7 +8,7 @@ import { encodeId } from '../../lib/ids';
 import { toIsoOrNull } from '../../lib/time';
 import type { AttemptRow, DeliveryRow } from './repo';
 
-/** DB row (snake_case, numeric ids) â†’ API shape (camelCase, public ids). */
+/** DB row (snake_case, numeric ids) → API shape (camelCase, public ids). */
 export const toDelivery = (r: DeliveryRow): Delivery => ({
   id: encodeId(ID_PREFIX.delivery, r.id),
   notificationId: encodeId(ID_PREFIX.notification, r.notification_id),
