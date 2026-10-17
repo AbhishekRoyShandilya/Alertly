@@ -3,6 +3,12 @@ import { buildApp } from '../../src/app';
 import type { Deps } from '../../src/context';
 import { createLogger } from '../../src/lib/logger';
 import { FakeClock } from '../../src/lib/time';
+import { createServices, type Services } from '../../src/services';
+import {
+  SimulatedProvider,
+  coingeckoProvider,
+  binanceProvider,
+} from '../../src/modules/prices/providers';
 import { createTestDb, type TestDb } from './db';
 import { testEnv } from './env';
 
@@ -10,6 +16,9 @@ export interface TestContext {
   testDb: TestDb;
   deps: Deps;
   clock: FakeClock;
+  services: Services;
+  /** The price feed behind provider "simulated": tests set prices with sim.freeze(symbol, price). */
+  sim: SimulatedProvider;
   app: Express;
   close(): Promise<void>;
 }
@@ -22,5 +31,17 @@ export async function createTestContext(
   const env = testEnv(testDb.url, envOverrides);
   const clock = new FakeClock(new Date());
   const deps: Deps = { env, db: testDb.db, clock, log: createLogger(env) };
-  return { testDb, deps, clock, app: buildApp(deps), close: () => testDb.drop() };
+  const sim = new SimulatedProvider(1);
+  const services = createServices(deps, {
+    providers: { simulated: sim, coingecko: coingeckoProvider(), binance: binanceProvider() },
+  });
+  return {
+    testDb,
+    deps,
+    clock,
+    services,
+    sim,
+    app: buildApp(deps, services),
+    close: () => testDb.drop(),
+  };
 }

@@ -6,7 +6,9 @@ import type { Deps } from './context';
 import { requestId } from './middleware/request-id';
 import { errorHandler, notFoundHandler } from './middleware/errors';
 import { healthRoutes } from './modules/health/routes';
-import { createServices } from './services';
+import { createServices, type Services } from './services';
+import { alertRoutes } from './modules/alerts/routes';
+import { priceAndUsageRoutes } from './modules/prices/routes';
 import { createAuthMiddleware } from './middleware/auth';
 import { authRoutes } from './modules/auth/routes';
 import { apiKeyRoutes } from './modules/api-keys/routes';
@@ -21,7 +23,7 @@ import { deliveryRoutes } from './modules/deliveries/routes';
  * Middleware order matters: request id first (so every later log line has it), body parsing
  * and security headers next, routes, then 404, then the error handler last.
  */
-export function buildApp(deps: Deps): Express {
+export function buildApp(deps: Deps, services: Services = createServices(deps)): Express {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', 1); // behind one proxy (Render/Railway/Vercel): real client IP for rate limits
@@ -32,7 +34,6 @@ export function buildApp(deps: Deps): Express {
   app.use(cors({ origin: deps.env.WEB_ORIGIN, credentials: true }));
   app.use(helmet());
 
-  const services = createServices(deps);
   const mw = createAuthMiddleware(deps, services);
 
   const v1 = Router();
@@ -42,6 +43,8 @@ export function buildApp(deps: Deps): Express {
   v1.use(channelRoutes(services.channels, mw));
   v1.use(notificationRoutes(services.notifications, mw));
   v1.use(deliveryRoutes(services.deliveries, mw));
+  v1.use(alertRoutes(services.alerts, mw));
+  v1.use(priceAndUsageRoutes(services.prices, services.usage, deps.env.PRICE_PROVIDER_DEFAULT, mw));
   app.use('/api/v1', v1);
 
   app.use(notFoundHandler);
